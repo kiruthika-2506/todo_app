@@ -1,15 +1,17 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven'
+    environment {
+        DOCKER_IMAGE = "23mis0389/todo-app:latest"
+        KUBECONFIG = "C:\\Users\\kirut\\.kube\\config"
     }
 
     stages {
 
-        stage('Build JAR') {
+        stage('Checkout Code') {
             steps {
-                bat 'mvn clean package -DskipTests'
+                git branch: 'main',
+                url: 'https://github.com/kiruthika-2506/todo-app.git'
             }
         }
 
@@ -21,7 +23,7 @@ pipeline {
 
         stage('Tag Docker Image') {
             steps {
-                bat 'docker tag todo-app 23mis0389/todo-app:latest'
+                bat 'docker tag todo-app %DOCKER_IMAGE%'
             }
         }
 
@@ -32,38 +34,49 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-
                     bat '''
-                    docker login -u %DOCKER_USER% -p %DOCKER_PASS%
-                    docker push 23mis0389/todo-app:latest
+                    echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                    docker push %DOCKER_IMAGE%
                     '''
                 }
             }
         }
 
-        // ✅ NEW STAGE: Kubernetes Deployment
-        stage('Deploy to Kubernetes') {
+        stage('Verify Kubernetes Connection') {
             steps {
-                bat 'kubectl apply -f deployment.yaml'
-                bat 'kubectl apply -f service.yaml'
+                bat '''
+                kubectl config current-context
+                kubectl cluster-info
+                kubectl get nodes
+                '''
             }
         }
 
-        // ✅ OPTIONAL: Verify
+        stage('Deploy to Kubernetes') {
+            steps {
+                bat '''
+                kubectl apply -f deployment.yaml
+                kubectl apply -f service.yaml
+                '''
+            }
+        }
+
         stage('Verify Deployment') {
             steps {
-                bat 'kubectl get pods'
-                bat 'kubectl get svc'
+                bat '''
+                kubectl get pods
+                kubectl get services
+                '''
             }
         }
     }
 
     post {
         success {
-            echo '✅ SUCCESS: Deployed to Kubernetes!'
+            echo '✅ Pipeline SUCCESS: App deployed to Kubernetes!'
         }
         failure {
-            echo '❌ ERROR: Pipeline failed!'
+            echo '❌ Pipeline FAILED!'
         }
     }
 }
