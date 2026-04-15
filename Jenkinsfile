@@ -8,12 +8,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout Code') {
-            steps {
-                git 'https://github.com/kiruthika-2506/todo_app.git'
-            }
-        }
-
         stage('Build JAR') {
             steps {
                 bat 'mvn clean package'
@@ -26,13 +20,7 @@ pipeline {
             }
         }
 
-        stage('Verify Docker Image') {
-            steps {
-                bat 'docker images'
-            }
-        }
-
-        stage('Check Kubernetes Connection') {
+        stage('Check Kubernetes') {
             steps {
                 withEnv(['KUBECONFIG=%KUBECONFIG%']) {
                     bat 'kubectl get nodes'
@@ -40,30 +28,12 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy') {
             steps {
                 withEnv(['KUBECONFIG=%KUBECONFIG%']) {
                     bat 'kubectl apply -f deployment.yaml --validate=false'
                 }
             }
-        }
-
-        stage('Verify Deployment') {
-            steps {
-                withEnv(['KUBECONFIG=%KUBECONFIG%']) {
-                    bat 'kubectl get pods'
-                    bat 'kubectl get services'
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ SUCCESS: App deployed to Kubernetes!'
-        }
-        failure {
-            echo '❌ ERROR: Pipeline failed. Check logs.'
         }
     }
 }
