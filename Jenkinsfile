@@ -2,16 +2,14 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "23mis0389/todo-app:latest"
-        KUBECONFIG = "C:\\Users\\kirut\\.kube\\config"
+        KUBECONFIG = "C:\\kube\\config"
     }
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                url: 'https://github.com/kiruthika-2506/todo-app.git'
+                git url: 'https://github.com/kiruthika-2506/todo_app', branch: 'main'
             }
         }
 
@@ -21,9 +19,9 @@ pipeline {
             }
         }
 
-        stage('Tag Docker Image') {
+        stage('Tag Image') {
             steps {
-                bat 'docker tag todo-app %DOCKER_IMAGE%'
+                bat 'docker tag todo-app 23mis0389/todo-app:latest'
             }
         }
 
@@ -34,19 +32,19 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
+
                     bat '''
                     echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-                    docker push %DOCKER_IMAGE%
+                    docker push 23mis0389/todo-app:latest
                     '''
                 }
             }
         }
 
-        stage('Verify Kubernetes Connection') {
+        stage('Verify Kubernetes') {
             steps {
                 bat '''
                 kubectl config current-context
-                kubectl cluster-info
                 kubectl get nodes
                 '''
             }
@@ -60,23 +58,14 @@ pipeline {
                 '''
             }
         }
-
-        stage('Verify Deployment') {
-            steps {
-                bat '''
-                kubectl get pods
-                kubectl get services
-                '''
-            }
-        }
     }
 
     post {
         success {
-            echo '✅ Pipeline SUCCESS: App deployed to Kubernetes!'
+            echo "✅ Pipeline SUCCESS!"
         }
         failure {
-            echo '❌ Pipeline FAILED!'
+            echo "❌ Pipeline FAILED!"
         }
     }
 }
