@@ -1,20 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todo-app
+name: java-app
 spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: todo-app
-  template:
-    metadata:
-      labels:
-        app: todo-app
-    spec:
-      containers:
-      - name: todo-container
-        image: 23mis0389/todo-app:latest
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 8080
+replicas: 2
+selector:
+matchLabels:
+app: java-app
+template:
+metadata:
+labels:
+app: java-app
+spec:
+containers:
+- name: java-app
+image: 23mis0389/java-app:latest
