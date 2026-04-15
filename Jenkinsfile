@@ -40,11 +40,27 @@ pipeline {
                 }
             }
         }
+
+        // ✅ NEW STAGE: Kubernetes Deployment
+        stage('Deploy to Kubernetes') {
+            steps {
+                bat 'kubectl apply -f deployment.yaml'
+                bat 'kubectl apply -f service.yaml'
+            }
+        }
+
+        // ✅ OPTIONAL: Verify
+        stage('Verify Deployment') {
+            steps {
+                bat 'kubectl get pods'
+                bat 'kubectl get svc'
+            }
+        }
     }
 
     post {
         success {
-            echo '✅ SUCCESS: Image pushed!'
+            echo '✅ SUCCESS: Deployed to Kubernetes!'
         }
         failure {
             echo '❌ ERROR: Pipeline failed!'
