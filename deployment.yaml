@@ -14,4 +14,4 @@ app: java-app
 spec:
 containers:
 - name: java-app
-image: 23mis0389/todo_app:latest
+image: 23mis0389/todo-app:latest
